@@ -1,0 +1,133 @@
+<div class="relative flex flex-auto w-full bg-card dark:bg-transparent">
+
+    <mat-drawer-container class="flex-auto h-full" [hasBackdrop]="false">
+
+        <mat-drawer class="w-full sm:w-100 lg:border-r lg:shadow-none dark:bg-gray-900" 
+                    [autoFocus]="false" 
+                    [(opened)]="drawerOpened" 
+                    #drawer>
+
+            @if (drawerComponent === 'app-new') {
+                <app-new [drawer]="drawer"></app-new>
+            }
+
+            @if (drawerComponent === 'app-profile') {
+                <app-profile [drawer]="drawer"></app-profile>
+            }
+        </mat-drawer>
+
+        <mat-drawer-content class="flex overflow-hidden">
+
+            @if (usersComponent && usersComponent.length > 0) {
+                <div class="relative flex flex-auto flex-col w-full min-w-0 lg:min-w-100 lg:max-w-100 bg-card dark:bg-transparent">
+
+                    <div class="flex flex-col flex-0 py-4 px-8 border-b bg-gray-50 dark:bg-transparent">
+                        <div class="flex items-center">
+                            
+                            <div class="flex items-center mr-1 cursor-pointer" (click)="openProfile()">
+                                <div class="relative flex flex-0 items-center justify-center w-10 h-10">
+                                    @if (userProfile) {
+                                        @if (userProfile.avatar) {
+                                            <img class="w-full h-full rounded-full object-cover" 
+                                                [src]="userProfile.avatar" 
+                                                alt="User avatar">
+                                        } @else {
+                                            <div class="flex items-center justify-center w-full h-full rounded-full text-lg uppercase bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                                                {{userProfile.name?.charAt(0)}}
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                                <div class="ml-4 font-medium truncate">{{userProfile?.name}}</div>
+                            </div>
+
+                            <div class="ml-auto">
+                                <button mat-icon-button (click)="openNewChat()">
+                                    <mat-icon [svgIcon]="'heroicons_outline:plus-circle'"></mat-icon>
+                                </button>
+                                <button class="ml-1 -mr-4" mat-icon-button [matMenuTriggerFor]="chatsHeaderMenu">
+                                    <mat-icon [svgIcon]="'heroicons_outline:ellipsis-vertical'"></mat-icon>
+                                </button>
+                                <mat-menu #chatsHeaderMenu="matMenu">
+                                    <button mat-menu-item (click)="openProfile()">
+                                        <mat-icon [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
+                                        <span>Profile</span>
+                                    </button>
+                                    <button mat-menu-item>
+                                        <mat-icon [svgIcon]="'heroicons_outline:cog-8-tooth'"></mat-icon>
+                                        <span>Settings</span>
+                                    </button>
+                                </mat-menu>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <mat-form-field class="fuse-mat-rounded fuse-mat-dense w-full" [subscriptSizing]="'dynamic'">
+                                <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                                <input matInput [autocomplete]="'off'" [placeholder]="'Search or start new chat'" (input)="filterChats(searchField.value)" #searchField>
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+                    <div class="flex-auto overflow-y-auto">
+                        @if (filteredUsers.length > 0) {
+                            @for (user of filteredUsers; track user.id) {
+                                <a class="z-20 flex items-center py-5 px-8 cursor-pointer border-b"
+                                [ngClass]="{'hover:bg-gray-100 dark:hover:bg-hover': !selectedUser || selectedUser.id !== user.id,
+                                            'bg-primary-50 dark:bg-hover': selectedUser && selectedUser.id === user.id}"
+                                [routerLink]="[user.id]">
+                                    
+                                    <div class="relative flex flex-0 items-center justify-center w-10 h-10">
+                                        @if (user.unreadCount > 0) {
+                                            <div class="absolute bottom-0 right-0 flex-0 w-2 h-2 -ml-0.5 rounded-full ring-2 ring-bg-card dark:ring-gray-900 bg-primary dark:bg-primary-500 text-on-primary"></div>
+                                        }
+                                        
+                                        @if (user.avatar) {
+                                            <img class="w-full h-full rounded-full object-cover" [src]="user.avatar" alt="Contact avatar">
+                                        } @else {
+                                            <div class="flex items-center justify-center w-full h-full rounded-full text-lg uppercase bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                                                {{user.name.charAt(0)}}
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="min-w-0 ml-4">
+                                        <div class="font-medium leading-5 truncate">{{user.name}}</div>
+                                        <div class="leading-5 truncate text-secondary" [class.text-primary]="user.unreadCount > 0">
+                                            {{user.lastMessage}}
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col items-end self-start ml-auto pl-2">
+                                        <div class="text-sm leading-5 text-secondary">{{user.lastMessageAt}}</div>
+                                        @if (user.muted) {
+                                            <mat-icon class="icon-size-5 text-hint" [svgIcon]="'heroicons_solid:speaker-x-mark'"></mat-icon>
+                                        }
+                                    </div>
+                                </a>
+                            }
+                        } @else {
+                            <ng-container *ngTemplateOutlet="noChats"></ng-container>
+                        }
+                    </div>
+                </div>
+            } @else {
+                <ng-container *ngTemplateOutlet="noChats"></ng-container>
+            }
+
+            <ng-template #noChats>
+                <div class="flex flex-auto flex-col items-center justify-center h-full">
+                    <mat-icon class="icon-size-24" [svgIcon]="'heroicons_outline:chat-bubble-oval-left-ellipsis'"></mat-icon>
+                    <div class="mt-4 text-2xl font-semibold tracking-tight text-secondary">No chats</div>
+                </div>
+            </ng-template>
+
+            <div class="flex-auto border-l"
+                [ngClass]="{'z-20 absolute inset-0 lg:static lg:inset-auto flex': selectedUser?.id,
+                            'hidden lg:flex': !selectedUser?.id}">
+                <router-outlet></router-outlet>
+            </div>
+
+        </mat-drawer-content>
+    </mat-drawer-container>
+</div>
